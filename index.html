@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="出納帳">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>出納帳</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- メイン画面 -->
+        <div id="main-screen" class="screen active">
+            <header>
+                <h1>出納帳</h1>
+                <button id="btn-history" class="icon-btn">
+                    <span class="icon">📋</span>
+                </button>
+            </header>
+
+            <div class="balance-section">
+                <div class="date" id="current-date">---</div>
+                <div class="balance" id="current-balance">¥0</div>
+                <div class="summary">
+                    <div class="income">
+                        <span class="label">入金</span>
+                        <span class="amount" id="total-income">+¥0</span>
+                    </div>
+                    <div class="expense">
+                        <span class="label">出金</span>
+                        <span class="amount" id="total-expense">-¥0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btn-expense" class="action-btn expense">
+                    <span class="icon">－</span>
+                    <span>出金</span>
+                </button>
+                <button id="btn-income" class="action-btn income">
+                    <span class="icon">＋</span>
+                    <span>入金</span>
+                </button>
+            </div>
+
+            <div class="transactions-section">
+                <h2>今日の取引</h2>
+                <div id="transactions-list" class="transactions-list">
+                    <div class="empty-state">取引がありません</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 入力画面 -->
+        <div id="input-screen" class="screen">
+            <header>
+                <button id="btn-cancel" class="text-btn">キャンセル</button>
+                <h1 id="input-title">出金</h1>
+                <button id="btn-save" class="text-btn primary">登録</button>
+            </header>
+
+            <div class="input-form">
+                <div class="type-indicator" id="type-indicator">
+                    <span class="icon">－</span>
+                </div>
+
+                <div class="input-group">
+                    <label>金額</label>
+                    <div class="amount-input">
+                        <span class="currency">¥</span>
+                        <input type="number" id="input-amount" placeholder="0" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>コメント（任意）</label>
+                    <input type="text" id="input-comment" placeholder="メモを入力...">
+                </div>
+
+                <div class="input-group">
+                    <label>画像（任意）</label>
+                    <div class="image-section">
+                        <div id="image-preview" class="image-preview hidden">
+                            <img id="preview-img" src="" alt="プレビュー">
+                            <button id="btn-remove-image" class="remove-btn">✕</button>
+                        </div>
+                        <div id="image-buttons" class="image-buttons">
+                            <label class="image-btn">
+                                <span class="icon">📷</span>
+                                <span>撮影</span>
+                                <input type="file" id="input-camera" accept="image/*" capture="environment" hidden>
+                            </label>
+                            <label class="image-btn">
+                                <span class="icon">🖼</span>
+                                <span>選択</span>
+                                <input type="file" id="input-gallery" accept="image/*" hidden>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 履歴画面 -->
+        <div id="history-screen" class="screen">
+            <header>
+                <button id="btn-back" class="text-btn">戻る</button>
+                <h1>履歴</h1>
+                <button id="btn-export" class="text-btn">出力</button>
+            </header>
+
+            <div id="history-list" class="history-list">
+                <div class="empty-state">履歴がありません</div>
+            </div>
+        </div>
+
+        <!-- 残金設定モーダル -->
+        <div id="balance-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-icon">📅</div>
+                <h2>新しい一日の始まり</h2>
+                <p id="modal-date">---</p>
+
+                <div class="modal-form">
+                    <p>残金を設定しますか？</p>
+                    <div class="toggle-group">
+                        <button id="btn-set-balance" class="toggle-btn active">設定する</button>
+                        <button id="btn-zero-start" class="toggle-btn">0からスタート</button>
+                    </div>
+
+                    <div id="balance-input-section" class="balance-input-section">
+                        <label>現在の残金</label>
+                        <div class="amount-input">
+                            <span class="currency">¥</span>
+                            <input type="number" id="initial-balance" placeholder="0" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-start-day" class="primary-btn">開始</button>
+            </div>
+        </div>
+
+        <!-- 取引詳細モーダル -->
+        <div id="detail-modal" class="modal hidden">
+            <div class="modal-content">
+                <button id="btn-close-detail" class="close-btn">✕</button>
+                <div id="detail-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
