@@ -17,11 +17,21 @@
         <!-- メイン画面 -->
         <div id="main-screen" class="screen active">
             <header>
+                <button id="btn-settings" class="icon-btn">
+                    <span class="icon">⚙️</span>
+                </button>
                 <h1>出納帳</h1>
                 <button id="btn-history" class="icon-btn">
                     <span class="icon">📋</span>
                 </button>
             </header>
+
+            <!-- 同期通知バナー -->
+            <div id="sync-banner" class="sync-banner hidden">
+                <span>🔄 同じLANに接続しました</span>
+                <button id="btn-sync-now">同期する</button>
+                <button id="btn-sync-dismiss" class="dismiss">✕</button>
+            </div>
 
             <div class="balance-section">
                 <div class="date" id="current-date">---</div>
@@ -154,10 +164,50 @@
                 <div id="detail-content"></div>
             </div>
         </div>
+
+        <!-- 設定モーダル -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <button id="btn-close-settings" class="close-btn">✕</button>
+                <h2>⚙️ 設定</h2>
+
+                <div class="settings-section">
+                    <h3>同期サーバー</h3>
+                    <div class="input-group">
+                        <label>サーバーURL</label>
+                        <input type="text" id="server-url" placeholder="http://192.168.1.x:3001">
+                    </div>
+                    <div class="settings-buttons">
+                        <button id="btn-auto-detect" class="secondary-btn">自動検出</button>
+                        <button id="btn-test-connection" class="secondary-btn">接続テスト</button>
+                    </div>
+                    <div id="connection-status" class="connection-status"></div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>同期情報</h3>
+                    <div class="info-row">
+                        <span>最終同期:</span>
+                        <span id="last-sync-time">未同期</span>
+                    </div>
+                </div>
+
+                <button id="btn-save-settings" class="primary-btn">保存</button>
+            </div>
+        </div>
+
+        <!-- 同期中モーダル -->
+        <div id="syncing-modal" class="modal hidden">
+            <div class="modal-content syncing">
+                <div class="spinner"></div>
+                <p>同期中...</p>
+            </div>
+        </div>
     </div>
 
     <script src="js/db.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/sync.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
