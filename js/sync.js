@@ -100,39 +100,37 @@ class SyncManager {
         return serverData;
     }
 
-    // ローカルデータを更新
+    // ローカルデータを更新（サーバー優先：完全置換）
     async updateLocalData(serverData) {
         const { dailyRecords, transactions } = serverData;
 
-        // Daily Records を更新
+        // ローカルデータをクリアしてサーバーデータで置換
+        await db.clearAllData();
+
+        // Daily Records を保存
         for (const record of dailyRecords) {
-            const existing = await db.getDailyRecord(record.date);
-            if (!existing || new Date(record.createdAt) > new Date(existing.createdAt)) {
-                await db.saveDailyRecord({
-                    date: record.date,
-                    startingBalance: record.startingBalance,
-                    didSetStartingBalance: record.didSetStartingBalance,
-                    createdAt: record.createdAt
-                });
-            }
+            await db.saveDailyRecord({
+                date: record.date,
+                startingBalance: record.startingBalance,
+                didSetStartingBalance: record.didSetStartingBalance,
+                createdAt: record.createdAt
+            });
         }
 
-        // Transactions を更新
+        // Transactions を保存
         for (const tx of transactions) {
-            const existing = await db.getTransaction(tx.id);
-            if (!existing) {
-                // 新規追加
-                await db.addTransaction({
-                    id: tx.id,
-                    type: tx.type,
-                    amount: tx.amount,
-                    comment: tx.comment,
-                    imageData: tx.imageData,
-                    date: tx.date,
-                    createdAt: tx.createdAt
-                });
-            }
+            await db.saveTransaction({
+                id: tx.id,
+                type: tx.type,
+                amount: tx.amount,
+                comment: tx.comment,
+                imageData: tx.imageData,
+                date: tx.date,
+                createdAt: tx.createdAt
+            });
         }
+
+        console.log(`同期完了: ${dailyRecords.length}日分, ${transactions.length}件の取引`);
     }
 
     // 最後の同期時刻を取得

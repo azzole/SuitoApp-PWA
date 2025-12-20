@@ -137,6 +137,34 @@ class Database {
             transactions
         };
     }
+
+    // Clear all data (for sync replacement)
+    async clearAllData() {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['dailyRecords', 'transactions'], 'readwrite');
+
+            const dailyStore = transaction.objectStore('dailyRecords');
+            const txStore = transaction.objectStore('transactions');
+
+            dailyStore.clear();
+            txStore.clear();
+
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () => reject(transaction.error);
+        });
+    }
+
+    // Save transaction (put = add or update)
+    async saveTransaction(tx) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['transactions'], 'readwrite');
+            const store = transaction.objectStore('transactions');
+            const request = store.put(tx);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
 }
 
 const db = new Database();
