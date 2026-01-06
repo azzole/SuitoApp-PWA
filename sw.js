@@ -1,6 +1,6 @@
 // Service Worker for offline support
 
-const CACHE_NAME = 'suito-app-v3';
+const CACHE_NAME = 'suito-app-v4';
 const urlsToCache = [
     './',
     './index.html',
@@ -8,7 +8,6 @@ const urlsToCache = [
     './js/db.js',
     './js/ui.js',
     './js/app.js',
-    './js/sync.js',
     './manifest.json',
     './icons/icon-192.png',
     './icons/icon-512.png'

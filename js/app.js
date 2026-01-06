@@ -6,7 +6,6 @@ class App {
         this.currentImageData = null;
         this.todayRecord = null;
         this.todayTransactions = [];
-        this.syncCheckInterval = null;
     }
 
     async init() {
@@ -15,16 +14,13 @@ class App {
 
         // Setup event listeners
         this.setupEventListeners();
-        this.setupSyncEventListeners();
+        this.setupSettingsEventListeners();
 
         // Check and prepare daily record
         await this.checkDaily();
 
         // Register service worker
         this.registerServiceWorker();
-
-        // Start sync check
-        this.startSyncCheck();
     }
 
     setupEventListeners() {
@@ -341,16 +337,34 @@ class App {
         try {
             const data = await db.exportData();
             const json = JSON.stringify(data, null, 2);
+            const filename = `suito-export-${UI.getTodayKey()}.json`;
             const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
 
+            // Web Share API対応（iOS Safari）
+            if (navigator.share && navigator.canShare) {
+                const file = new File([blob], filename, { type: 'application/json' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: '出納帳データ',
+                        text: `出納帳エクスポート (${UI.formatDate(new Date())})`,
+                        files: [file]
+                    });
+                    return;
+                }
+            }
+
+            // フォールバック：ダウンロードリンク
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `suito-export-${UI.getTodayKey()}.json`;
+            a.download = filename;
             a.click();
-
             URL.revokeObjectURL(url);
         } catch (error) {
+            if (error.name === 'AbortError') {
+                // ユーザーがキャンセルした場合は無視
+                return;
+            }
             console.error('Export failed:', error);
             alert('エクスポートに失敗しました');
         }
@@ -367,12 +381,12 @@ class App {
         }
     }
 
-    // ========== 同期機能 ==========
+    // ========== 設定機能 ==========
 
-    setupSyncEventListeners() {
+    setupSettingsEventListeners() {
         // 設定ボタン
         document.getElementById('btn-settings').addEventListener('click', () => {
-            this.openSettingsModal();
+            UI.showModal('settings-modal');
         });
 
         // 設定モーダルを閉じる
@@ -380,141 +394,11 @@ class App {
             UI.hideModal('settings-modal');
         });
 
-        // 自動検出ボタン
-        document.getElementById('btn-auto-detect').addEventListener('click', () => {
-            this.autoDetectServer();
+        // エクスポートボタン（設定画面）
+        document.getElementById('btn-export-settings').addEventListener('click', () => {
+            UI.hideModal('settings-modal');
+            this.exportData();
         });
-
-        // 接続テストボタン
-        document.getElementById('btn-test-connection').addEventListener('click', () => {
-            this.testConnection();
-        });
-
-        // 設定保存ボタン
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            this.saveSettings();
-        });
-
-        // 同期バナー - 同期ボタン
-        document.getElementById('btn-sync-now').addEventListener('click', () => {
-            this.performSync();
-        });
-
-        // 同期バナー - 閉じるボタン
-        document.getElementById('btn-sync-dismiss').addEventListener('click', () => {
-            document.getElementById('sync-banner').classList.add('hidden');
-        });
-    }
-
-    openSettingsModal() {
-        // 現在のサーバーURLを表示
-        document.getElementById('server-url').value = syncManager.getServerUrl();
-
-        // 最終同期時刻を表示
-        const lastSync = syncManager.getLastSyncTime();
-        document.getElementById('last-sync-time').textContent = lastSync || '未同期';
-
-        // 接続状態をクリア
-        document.getElementById('connection-status').textContent = '';
-        document.getElementById('connection-status').className = 'connection-status';
-
-        UI.showModal('settings-modal');
-    }
-
-    async autoDetectServer() {
-        const statusEl = document.getElementById('connection-status');
-        statusEl.textContent = 'サーバーを検索中...';
-        statusEl.className = 'connection-status loading';
-
-        const url = await syncManager.autoDetectServer();
-
-        if (url) {
-            document.getElementById('server-url').value = url;
-            statusEl.textContent = `✓ サーバーを検出: ${url}`;
-            statusEl.className = 'connection-status success';
-        } else {
-            statusEl.textContent = '✕ サーバーが見つかりません';
-            statusEl.className = 'connection-status error';
-        }
-    }
-
-    async testConnection() {
-        const url = document.getElementById('server-url').value.trim();
-        const statusEl = document.getElementById('connection-status');
-
-        if (!url) {
-            statusEl.textContent = 'URLを入力してください';
-            statusEl.className = 'connection-status error';
-            return;
-        }
-
-        statusEl.textContent = '接続テスト中...';
-        statusEl.className = 'connection-status loading';
-
-        const success = await syncManager.checkServer(url);
-
-        if (success) {
-            statusEl.textContent = '✓ 接続成功';
-            statusEl.className = 'connection-status success';
-        } else {
-            statusEl.textContent = '✕ 接続失敗';
-            statusEl.className = 'connection-status error';
-        }
-    }
-
-    saveSettings() {
-        const url = document.getElementById('server-url').value.trim();
-        syncManager.setServerUrl(url);
-        UI.hideModal('settings-modal');
-
-        // 設定保存後にサーバーチェック
-        if (url) {
-            this.checkSyncServer();
-        }
-    }
-
-    async performSync() {
-        // 同期バナーを隠す
-        document.getElementById('sync-banner').classList.add('hidden');
-
-        // 同期中モーダルを表示
-        UI.showModal('syncing-modal');
-
-        try {
-            await syncManager.sync();
-
-            // データをリロード
-            await this.loadTodayData();
-
-            UI.hideModal('syncing-modal');
-            alert('同期が完了しました');
-        } catch (error) {
-            console.error('Sync failed:', error);
-            UI.hideModal('syncing-modal');
-            alert('同期に失敗しました: ' + error.message);
-        }
-    }
-
-    startSyncCheck() {
-        // 起動時にチェック
-        setTimeout(() => this.checkSyncServer(), 3000);
-
-        // 5分ごとにチェック
-        this.syncCheckInterval = setInterval(() => {
-            this.checkSyncServer();
-        }, 5 * 60 * 1000);
-    }
-
-    async checkSyncServer() {
-        const serverUrl = syncManager.getServerUrl();
-        if (!serverUrl) return;
-
-        const available = await syncManager.checkServer();
-
-        if (available) {
-            // 同期バナーを表示
-            document.getElementById('sync-banner').classList.remove('hidden');
-        }
     }
 }
 

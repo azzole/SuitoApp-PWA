@@ -31,9 +31,32 @@ function saveData(data) {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+// 管理画面
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // ヘルスチェック（LAN検出用）
 app.get('/api/ping', (req, res) => {
     res.json({ status: 'ok', server: 'suito-sync', timestamp: new Date().toISOString() });
+});
+
+// 管理用：データ直接保存
+app.post('/api/admin/save', (req, res) => {
+    try {
+        const { dailyRecords, transactions } = req.body;
+
+        // 日付でソート
+        dailyRecords.sort((a, b) => b.date.localeCompare(a.date));
+        transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        saveData({ dailyRecords, transactions });
+
+        res.json({ success: true, message: 'データを保存しました' });
+    } catch (error) {
+        console.error('Admin save error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // 全データ取得（同期用）

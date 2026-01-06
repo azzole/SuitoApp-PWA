@@ -26,12 +26,6 @@
                 </button>
             </header>
 
-            <!-- 同期通知バナー -->
-            <div id="sync-banner" class="sync-banner hidden">
-                <span>🔄 同じLANに接続しました</span>
-                <button id="btn-sync-now">同期する</button>
-                <button id="btn-sync-dismiss" class="dismiss">✕</button>
-            </div>
 
             <div class="balance-section">
                 <div class="date" id="current-date">---</div>
@@ -172,42 +166,26 @@
                 <h2>⚙️ 設定</h2>
 
                 <div class="settings-section">
-                    <h3>同期サーバー</h3>
-                    <div class="input-group">
-                        <label>サーバーURL</label>
-                        <input type="text" id="server-url" placeholder="http://192.168.1.x:3001">
-                    </div>
-                    <div class="settings-buttons">
-                        <button id="btn-auto-detect" class="secondary-btn">自動検出</button>
-                        <button id="btn-test-connection" class="secondary-btn">接続テスト</button>
-                    </div>
-                    <div id="connection-status" class="connection-status"></div>
+                    <h3>データ管理</h3>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
+                        履歴画面の「出力」ボタンからデータをエクスポートできます。
+                    </p>
+                    <button id="btn-export-settings" class="primary-btn">データをエクスポート</button>
                 </div>
 
                 <div class="settings-section">
-                    <h3>同期情報</h3>
+                    <h3>アプリ情報</h3>
                     <div class="info-row">
-                        <span>最終同期:</span>
-                        <span id="last-sync-time">未同期</span>
+                        <span>バージョン:</span>
+                        <span>2.0.0</span>
                     </div>
                 </div>
-
-                <button id="btn-save-settings" class="primary-btn">保存</button>
-            </div>
-        </div>
-
-        <!-- 同期中モーダル -->
-        <div id="syncing-modal" class="modal hidden">
-            <div class="modal-content syncing">
-                <div class="spinner"></div>
-                <p>同期中...</p>
             </div>
         </div>
     </div>
 
     <script src="js/db.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/sync.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
