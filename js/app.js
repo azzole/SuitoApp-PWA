@@ -6,6 +6,7 @@ class App {
         this.currentImageData = null;
         this.todayRecord = null;
         this.todayTransactions = [];
+        this._currentDateKey = null;
     }
 
     async init() {
@@ -18,6 +19,9 @@ class App {
 
         // Check and prepare daily record
         await this.checkDaily();
+
+        // Date change detection
+        this.startDateChangeDetection();
 
         // Register service worker
         this.registerServiceWorker();
@@ -107,6 +111,7 @@ class App {
 
     async checkDaily() {
         const todayKey = UI.getTodayKey();
+        this._currentDateKey = todayKey;
         this.todayRecord = await db.getDailyRecord(todayKey);
 
         if (!this.todayRecord) {
@@ -115,6 +120,28 @@ class App {
             UI.showModal('balance-modal');
         } else {
             await this.loadTodayData();
+        }
+    }
+
+    startDateChangeDetection() {
+        // 1. visibilitychange: アプリがフォアグラウンドに戻ったとき
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                this.checkDateChange();
+            }
+        });
+
+        // 2. 定期チェック: 60秒ごと（バックグラウンドからの復帰漏れ対策）
+        setInterval(() => {
+            this.checkDateChange();
+        }, 60000);
+    }
+
+    async checkDateChange() {
+        const nowKey = UI.getTodayKey();
+        if (nowKey !== this._currentDateKey) {
+            console.log(`日付変更を検出: ${this._currentDateKey} → ${nowKey}`);
+            await this.checkDaily();
         }
     }
 
